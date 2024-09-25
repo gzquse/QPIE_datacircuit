@@ -1,0 +1,29 @@
+# Use the official PyTorch image with CUDA 12.1 and cuDNN 8
+FROM pytorch/pytorch:2.3.1-cuda12.1-cudnn8-runtime
+
+# Set a working directory inside the container
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    cmake \
+    git \
+    curl \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+RUN pip install --upgrade pip
+
+# Install PennyLane and its dependencies
+RUN pip install pennylane pennylane-lightning
+
+# Optionally, you can install any additional plugins or packages if needed, for example:
+# RUN pip install pennylane-qiskit qiskit
+
+# Copy the current directory contents into the container at /app (if you have code to add)
+COPY . /app
+
+# Set the default command to run when the container starts
+CMD ["/bin/bash"]
