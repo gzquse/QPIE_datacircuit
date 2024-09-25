@@ -6,7 +6,6 @@ from torch.utils.data import DataLoader, TensorDataset
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from sklearn.datasets import make_moons
 
 #...!...!..................
 def get_parser():

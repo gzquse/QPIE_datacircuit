@@ -18,6 +18,10 @@ from matplotlib.ticker import MaxNLocator, FormatStrFormatter
 import numpy as np
 import torch
 from sklearn.datasets import make_moons
+from matplotlib.colors import ListedColormap
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
 
 import argparse
 
@@ -54,6 +58,49 @@ def get_moon():
     c = ["#3498db" if y_ == 0 else "#e74c3c" for y_ in y]  # New colors for each class
     return X, c
 
+def twospirals(n_points, noise=0.7, turns=1.52, random_state=None):
+        """Returns the two spirals dataset."""
+       
+        if random_state == None:
+            rng_sp = np.random
+        else:
+            rng_sp = np.random.RandomState(random_state) 
+        n = np.sqrt(rng_sp.rand(n_points, 1)) * turns * (2 * np.pi)
+        d1x = -np.cos(n) * n + rng_sp.rand(n_points, 1) * noise
+        d1y = np.sin(n) * n + rng_sp.rand(n_points, 1) * noise
+        return (np.vstack((np.hstack((d1x,  d1y)),np.hstack((-d1x, -d1y)))), 
+                np.hstack((np.zeros(n_points).astype(int),np.ones(n_points).astype(int))))
+
+def digits2position(vec_of_digits, n_positions):
+        """One-hot encoding of a batch of vectors. """
+        return torch.tensor(np.eye(n_positions)[vec_of_digits])
+
+def position2digit(exp_values):
+        """Inverse of digits2position()."""
+        return np.argmax(exp_values)
+
+def get_spiral():
+    N_train = 1600             # Number of training points
+    noise_0 = 0.001                            # Initial spread of random weight vector
+    N_test = 200                               # Number of test points
+    N_tot = N_train + N_test  
+
+    cm = plt.cm.RdBu                           # Test point colors
+    cm_bright = ListedColormap(['#3498db', '#e74c3c']) # Train point colors
+    
+    datasets = [twospirals(N_tot, random_state=21, turns=1.52),
+            twospirals(N_tot, random_state=21, turns=2.0),
+           ]
+    figure_dataset = plt.figure("dataset",figsize=(4, 4 * len(datasets)))
+    for ds_cnt, ds in enumerate(datasets):
+            # return the first 
+            # Normalize dataset and split into training and test part
+            X, y = ds
+            X = StandardScaler().fit_transform(X)
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=N_test, random_state=42)
+            
+            return X_train, y_train, cm_bright
+    
 #............................
 #............................
 #............................
@@ -70,10 +117,16 @@ class Plotter(PlotterBackbone):
         ax = self.plt.subplot(nrow,ncol,1)
        
         # ax.plot(nqV_shifted, runtV_shifted, marker=marker_style, linestyle='-', markerfacecolor=isFilled, color=dCol,label=dLab,markersize=9)     
-        X, c = get_moon()
-        ax.scatter(X[:, 0], X[:, 1], c=c)
+        if tag1 == 'moon':
+            X, c = get_moon()
+            ax.scatter(X[:, 0], X[:, 1], c=c)
               
-        tit='Compute Moon'
+            tit='Compute Moon'
+        elif tag1 == 'spiral':
+            X, y, c = get_spiral()
+            ax.scatter(X[:, 0], X[:, 1], c=y, cmap=cm_bright,
+                edgecolors='k',alpha=0.1)
+            tit='Compute Spiral'
         # Place the title above the legend
         ax.axis('off')
         ax.set_title(tit, pad=50)  # Adjust the pad value as needed
