@@ -21,7 +21,7 @@ from sklearn.datasets import make_moons
 from matplotlib.colors import ListedColormap
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-
+import matplotlib.pyplot as plt
 
 import argparse
 
@@ -84,9 +84,6 @@ def get_spiral():
     noise_0 = 0.001                            # Initial spread of random weight vector
     N_test = 200                               # Number of test points
     N_tot = N_train + N_test  
-
-    cm = plt.cm.RdBu                           # Test point colors
-    cm_bright = ListedColormap(['#3498db', '#e74c3c']) # Train point colors
     
     datasets = [twospirals(N_tot, random_state=21, turns=1.52),
             twospirals(N_tot, random_state=21, turns=2.0),
@@ -99,7 +96,7 @@ def get_spiral():
             X = StandardScaler().fit_transform(X)
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=N_test, random_state=42)
             
-            return X_train, y_train, cm_bright
+            return X_train, y_train
     
 #............................
 #............................
@@ -123,9 +120,11 @@ class Plotter(PlotterBackbone):
               
             tit='Compute Moon'
         elif tag1 == 'spiral':
-            X, y, c = get_spiral()
+            cm = plt.cm.RdBu                           # Test point colors
+            cm_bright = ListedColormap(['#3498db', '#e74c3c']) # Train point colors
+            X, y = get_spiral()
             ax.scatter(X[:, 0], X[:, 1], c=y, cmap=cm_bright,
-                edgecolors='k',alpha=0.1)
+                edgecolors='k',alpha=0.8)
             tit='Compute Spiral'
         # Place the title above the legend
         ax.axis('off')
