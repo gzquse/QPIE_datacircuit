@@ -115,8 +115,9 @@ class QuantumFunction(Function):
         results = cudaq.observe(self.kernel, self.hamiltonian, qubit_count,
                                 theta_vals)
 
-        exp_vals = [results[i].expectation() for i in range(len(results))]
-        exp_vals = torch.Tensor(exp_vals).to(device)
+        exp_vals = torch.tensor(
+            [results[i].expectation() for i in range(len(results))]
+        ).to(device)
 
         return exp_vals
 
