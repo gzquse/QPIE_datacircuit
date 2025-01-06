@@ -69,13 +69,35 @@ def prepare_data(target_digits, sample_count, test_size):
 
     return x_train, x_test, y_train, y_test
 
+def generate_narma_sequence(order, length, seed=0):
+    """Generate NARMA sequence of a given order and length."""
+    np.random.seed(seed)
+    u = np.random.rand(length)
+    y = np.zeros(length)
+    for t in range(order, length):
+        if order == 5:
+            y[t] = 0.3 * y[t-1] + 0.05 * y[t-1] * np.sum(y[t-5:t]) + 1.5 * u[t-1] * u[t-5] + 0.1
+        elif order == 10:
+            y[t] = 0.3 * y[t-1] + 0.05 * y[t-1] * np.sum(y[t-10:t]) + 1.5 * u[t-1] * u[t-10] + 0.1
+    return u, y
+
+def prepare_narma_data(order, sample_count, test_size):
+    """Prepare NARMA dataset for training and testing."""
+    u, y = generate_narma_sequence(order, sample_count + test_size)
+    x_train, x_test, y_train, y_test = train_test_split(u, y, test_size=test_size/sample_count, shuffle=False)
+    x_train = torch.tensor(x_train, dtype=torch.float32).unsqueeze(1).to(device)
+    x_test = torch.tensor(x_test, dtype=torch.float32).unsqueeze(1).to(device)
+    y_train = torch.tensor(y_train, dtype=torch.float32).to(device)
+    y_test = torch.tensor(y_test, dtype=torch.float32).to(device)
+    return x_train, x_test, y_train, y_test
+
 # Classical parameters.
 
 sample_count = 1000  # Total number of images to use.
 target_digits = [5, 6]  # Hand written digits to classify.
 test_size = 30  # Percentage of dataset to be used for testing.
 classification_threshold = 0.5  # Classification boundary used to measure accuracy.
-epochs = 1000  # Number of epochs to train for.
+epochs = 10  # Number of epochs to train for.
 
 # Quantum parmeters.
 
@@ -125,7 +147,7 @@ class QuantumFunction(Function):
     def forward(ctx, thetas: torch.tensor, quantum_circuit,
                 shift) -> torch.tensor:
 
-        # Save shift and quantum_circuit in context to use in backward.
+        # Save shift and quantum_circuit in bcontext to use in ackward.
         ctx.shift = shift
         ctx.quantum_circuit = quantum_circuit
 
@@ -192,6 +214,7 @@ class Hybrid_QNN(nn.Module):
 
         # The 2 outputs from PyTorch fc5 layer feed into the 2 variational gates in the quantum circuit.
         self.quantum = QuantumLayer(qubit_count, hamiltonian, shift)
+
 
     def forward(self, x):
 
@@ -270,6 +293,13 @@ print("Testing Accuracy:", testing_accuracy[:5], "Length:", len(testing_accuracy
 print("Training Cost:", training_cost[:5], "Length:", len(training_cost))
 print("Testing Cost:", testing_cost[:5], "Length:", len(testing_cost))
 
+# Print final results
+print("Final Training Accuracy:", training_accuracy[-1])
+print("Final Testing Accuracy:", testing_accuracy[-1])
+print("Final Training Cost:", training_cost[-1])
+print("Final Testing Cost:", testing_cost[-1])
+
+# Plot and save the training and testing cost and accuracy
 plt.figure(figsize=(10, 5))
 
 plt.subplot(1, 2, 1)
@@ -287,4 +317,97 @@ plt.ylabel('Accuracy')
 plt.legend()
 
 plt.tight_layout()
-plt.savefig('./out/hqml.png')
+plt.savefig('./out/hqml_series.png')
+plt.show()
+
+# Plot ground truth and predictions
+hybrid_model.eval()
+with torch.no_grad():
+    y_hat_train = hybrid_model(x_train).cpu().numpy()
+    y_hat_test = hybrid_model(x_test).cpu().numpy()
+
+plt.figure(figsize=(10, 5))
+
+plt.subplot(1, 2, 1)
+plt.plot(y_train.cpu().numpy(), label='Ground Truth')
+plt.plot(y_hat_train, label='Prediction')
+plt.xlabel('Time Steps')
+plt.ylabel('Value')
+plt.title('Training Data')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.plot(y_test.cpu().numpy(), label='Ground Truth')
+plt.plot(y_hat_test, label='Prediction')
+plt.xlabel('Time Steps')
+plt.ylabel('Value')
+plt.title('Testing Data')
+plt.legend()
+
+plt.tight_layout()
+plt.savefig('./out/hqml_series_predictions.png')
+plt.show()
+
+# Plot ground truth and predictions for NARMA 5 model
+order = 5
+sample_count = 1000
+test_size = 200
+x_train, x_test, y_train, y_test = prepare_narma_data(order, sample_count, test_size)
+
+hybrid_model.eval()
+with torch.no_grad():
+    y_hat_train = hybrid_model(x_train).cpu().numpy()
+    y_hat_test = hybrid_model(x_test).cpu().numpy()
+
+plt.figure(figsize=(10, 5))
+
+plt.subplot(1, 2, 1)
+plt.plot(y_train.cpu().numpy(), label='Ground Truth')
+plt.plot(y_hat_train, label='Prediction')
+plt.xlabel('Time Steps')
+plt.ylabel('Value')
+plt.title('NARMA 5 Training Data')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.plot(y_test.cpu().numpy(), label='Ground Truth')
+plt.plot(y_hat_test, label='Prediction')
+plt.xlabel('Time Steps')
+plt.ylabel('Value')
+plt.title('NARMA 5 Testing Data')
+plt.legend()
+
+plt.tight_layout()
+plt.savefig('./out/narma5_predictions.png')
+plt.show()
+
+# Plot ground truth and predictions for NARMA 10 model
+order = 10
+x_train, x_test, y_train, y_test = prepare_narma_data(order, sample_count, test_size)
+
+hybrid_model.eval()
+with torch.no_grad():
+    y_hat_train = hybrid_model(x_train).cpu().numpy()
+    y_hat_test = hybrid_model(x_test).cpu().numpy()
+
+plt.figure(figsize=(10, 5))
+
+plt.subplot(1, 2, 1)
+plt.plot(y_train.cpu().numpy(), label='Ground Truth')
+plt.plot(y_hat_train, label='Prediction')
+plt.xlabel('Time Steps')
+plt.ylabel('Value')
+plt.title('NARMA 10 Training Data')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.plot(y_test.cpu().numpy(), label='Ground Truth')
+plt.plot(y_hat_test, label='Prediction')
+plt.xlabel('Time Steps')
+plt.ylabel('Value')
+plt.title('NARMA 10 Testing Data')
+plt.legend()
+
+plt.tight_layout()
+plt.savefig('./out/narma10_predictions.png')
+plt.show()

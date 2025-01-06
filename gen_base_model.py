@@ -25,10 +25,6 @@ def get_parser():
     return args
 
 # this example only has one layer
-
-import pennylane as qml
-import numpy as np
-
 n_qubits = 10
 n_layers = 1  
 dev = qml.device("lightning.qubit", wires=n_qubits)

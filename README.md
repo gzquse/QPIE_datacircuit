@@ -14,6 +14,9 @@ view it interactively
 ## Spiral dataset
 1. `./pl_sum.py -p b -Y`
 
+# run with shifter
+shifter --image=nersc/pytorch:24.06.01 --module gpu,nccl-plugin --env PYTHONUSERBASE=$SCRATCH/cudaq
+
 
 ### GPU requriements NVIDIA A100 80GBs
 
