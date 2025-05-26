@@ -1,3 +1,4 @@
+[![DOI](https://zenodo.org/badge/990962809.svg)](https://doi.org/10.5281/zenodo.15522456)
 # Build Instructions
 
 1. docker build -f docker/Dockerfile.pennylane -t pytorch-pennylane
