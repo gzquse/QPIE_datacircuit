@@ -138,6 +138,33 @@ class Plotter(PlotterBackbone):
                                        normalize=True)
             ax.imshow(grid_img.permute(1, 2, 0))
             tit='Compute MNIST'
+        elif tag1 == 'narma5':
+            # Generate synthetic data for ground truth and predictions
+            time = np.arange(0, 100, 1)
+            ground_truth = 0.2 + 0.05 * np.sin(0.2 * time) + 0.01 * np.random.randn(len(time))
+
+            # Simulate predictions for different epochs
+            epochs = [1, 15, 30, 100]
+            predictions = {epoch: ground_truth + 0.05 * (1 - np.exp(-epoch / 20)) * np.random.randn(len(time)) for epoch in epochs}
+
+            # Create subplots
+            fig, axes = plt.subplots(len(epochs), 1, figsize=(8, 12), sharex=True)
+
+            for i, epoch in enumerate(epochs):
+                ax = axes[i]
+                ax.plot(time, ground_truth, label="Ground Truth", color='blue')
+                ax.plot(time, predictions[epoch], label="Prediction", color='orange', linestyle="--")
+                ax.axvline(x=50, color='red', linestyle=":", label="Change Point" if i == 0 else None)
+                ax.set_ylabel("Value")
+                ax.set_title(f"Epoch {epoch}")
+                ax.legend()
+
+            axes[-1].set_xlabel("Time")
+            plt.tight_layout()
+            plt.subplots_adjust(top=0.95)
+            output_path = "narma5_results.pdf"
+            plt.savefig(output_path, format="pdf")
+            tit="Results: Quantum FWP for NARMA5"
         # Place the title above the legend
         ax.axis('off')
         ax.set_title(tit, pad=50)  # Adjust the pad value as needed
@@ -211,5 +238,7 @@ if __name__ == '__main__':
         plot.compute_time(None,'spiral',figId=2, shift=args.shift)
     if 'c' in args.showPlots:
         plot.compute_time(None,'mnist',figId=3, shift=args.shift)
+    if 'd' in args.showPlots:
+        plot.compute_time(None,'narma5',figId=4, shift=args.shift)
     plot.display_all(png=1)
     
