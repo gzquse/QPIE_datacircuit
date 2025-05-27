@@ -4,6 +4,9 @@
 1. docker build -f docker/Dockerfile.pennylane -t pytorch-pennylane
 2. . ./pm_martin.source
 
+## Deep Research document for QPIE
+https://deepwiki.com/gzquse/QPIE_datacircuit
+
 ## CUDA-Q version
 https://nvidia.github.io/cuda-quantum/latest/using/install/install.html
 
